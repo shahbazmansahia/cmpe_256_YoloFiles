@@ -17,6 +17,7 @@ from tensorflow.compat.v1 import InteractiveSession
 
 import os;
 import tqdm;
+import pandas as pd;
 
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
@@ -43,13 +44,20 @@ def main(_argv):
     print ("Path: ", images[0], "\n");
     enumerator = enumerate(images, 1);
 
+    count_list = []
+    f_name_list = []
+    score_list = []
+    class_list = []
+    class_label_list = []
+
     if os.path.isdir(images[0]):
         is_dir = True;
         # counts for files and then redefines enumerator to go over multiple files in a directory!
         file_names = os.listdir(images[0]);
         items = [images[0] + s for s in file_names]
         print("Items: \n", items, "\n");
-        enumerator = enumerate (items, 1);
+        print("Item #: \n", len(items), "\n");
+        enumerator = enumerate (items, 0);
         #enumerator = enumerate (tqdm(items));
 
 
@@ -116,22 +124,23 @@ def main(_argv):
         pred_bbox = [boxes.numpy(), scores.numpy(), classes.numpy(), valid_detections.numpy()]
 
         ### cusom code starts here
-        print ("boxes type: ", type(boxes.numpy()), "\n")
-        print ("boxes: ", boxes.numpy(), "\n")
 
-        print ("scores type: ", type(scores.numpy()), "\n")
-        print ("scores: ", scores.numpy(), "\n")
-        for i in scores.numpy():
-            print (print ("scores: ", len(i), "\n"))
+        #print ("boxes type: ", type(boxes.numpy()), "\n")
+        #print ("boxes: ", boxes.numpy(), "\n")
 
-        print ("classes type: ", type(classes.numpy()), "\n")
-        print ("classes: ", classes.numpy(), "\n")
-        for i in classes.numpy():
-            print (print ("classes: ", len(i), "\n"))
+        #print ("scores type: ", type(scores.numpy()), "\n")
+        #print ("scores: ", scores.numpy(), "\n")
+        #for i in scores.numpy():
+        #    print (print ("scores: ", len(i), "\n"))
+
+        #print ("classes type: ", type(classes.numpy()), "\n")
+        #print ("classes: ", classes.numpy(), "\n")
+        #for i in classes.numpy():
+        #    print (print ("classes: ", len(i), "\n"))
 
 
-        print ("valid_detections type: ", type(valid_detections.numpy()), "\n")
-        print ("valid_detections: ", valid_detections.numpy(), "\n")
+        #print ("valid_detections type: ", type(valid_detections.numpy()), "\n")
+        #print ("valid_detections: ", valid_detections.numpy(), "\n")
         ### cusom code end here
 
         # read in all class names from config
@@ -154,43 +163,129 @@ def main(_argv):
         ### cusom code starts here
         # to rename file the same as object
         cv2.imwrite(FLAGS.output + file_names[count] + '.png', image)
-        print ("class_names: ", class_names, "\n")
-        for i in scores.numpy():
-            for j in range(len(i)):
-                if (i[j] > 0):
-                    print (class_names[j]);
+
+        print ("Item processed: ", count,"\nItem Path: ", image_path , "\n")
+
+        #print ("class_names: ", class_names, "\n")
+        #for i in scores.numpy():
+        #    for j in range(len(i)):
+        #        if (i[j] > 0):
+        #            print (class_names[j]);
 
         #for i in scores.
         # logging values
         try:
+
+            #df = pd.DataFrame()
             with open (FLAGS.output + "detection.txt", 'a') as f:
                 #f.write (file_names[count] + "," + str(scores.numpy()[:]) + "," + classes.numpy()[:])
 
-                f.write (file_names[count] + ",[")
+                #f.write (file_names[count] + ",")
 
+                scores_str = "[ ";
                 # for writing scores to file
                 for i in scores.numpy():
-                    f.write(str(i) + " ")
-                f.write ("],[")
+                    #f.write(str(i) + " ")
+                    scores_str = scores_str + str(i)[:-1] + ",";
+                    print ("5th I in scores:", str(i[5]))
+                    print ("6th I in scores:", str(i[6]))
+                    ### test
+                    score_list.append(i)
+                    #print (scores_str)
 
+                #f.write ("],[")
+                scores_str = scores_str[:-1] + "]"
+
+                classes_str = "[ "
                 # for writing classes to file
                 for i in classes.numpy():
-                    f.write(str(i) + " ")
-                f.write ("],[")
+                    #f.write(str(i) + " ")
+                    classes_str = classes_str + str(i)[:-1] + ",";
+                    class_list.append(i)
 
+                #f.write ("],[")
+                classes_str = classes_str[:-1] + "]"
+
+                class_n_list  = "["
                 # for getting list of detected objects from classes
                 print ("class_names: ", class_names, "\n")
                 for i in scores.numpy():
                     for j in range(len(i)):
                         if (i[j] > 0):
-                            f.write(class_names[j] + " ")
-                f.write ("]\n")
+                            #f.write(class_names[j] + " ")
+                            class_n_list = class_n_list + class_names[j] + " "
+                            class_label_list.append(class_names[j])
+
+                #f.write ("]\n")
+                if len(class_n_list) > 1:
+                    class_n_list = class_n_list[:-1] + "]"
+
+                else:
+                    class_n_list = class_n_list + "]"
+
+                count_list.append(count)
+                f_name_list.append(file_names[count])
+                #line = [str(count), file_names[count], scores_str, classes_str, class_n_list]
+
+                f.write (str(count) + "|" + file_names[count] + "|" + scores_str + "|" + classes_str + "|" + class_n_list + "\n")
+                #f.write(line)
+
+
+                print (str(count) + "\n File Name: " + file_names[count] + "\nScores: " + scores_str + "\nClasses: " + classes_str + "\nClass List: " + class_n_list + "\n")
+
 
 
                 print ("Creating text file for logging values...")
+
+                ### test test block starts
+                try:
+
+                    #df = pd.DataFrame()
+                    with open (FLAGS.output + "filenames.txt", 'a') as f:
+                        for i in f_name_list:
+                            f.write(str(i) + "\n")
+                except:
+                    print ("filenames error!")
+                    pass;
+
+                try:
+
+                    #df = pd.DataFrame()
+                    with open (FLAGS.output + "scores.txt", 'a') as f:
+                        for i in score_list:
+                            f.write(str(i) + "\n")
+                except:
+                    print ("scores error!")
+                    pass;
+
+                try:
+
+                    #df = pd.DataFrame()
+                    with open (FLAGS.output + "classes.txt", 'a') as f:
+                        for i in class_list:
+                            f.write(str(i) + "\n")
+                except:
+                    print ("class error!")
+                    pass;
+                try:
+
+                    #df = pd.DataFrame()
+                    with open (FLAGS.output + "scores.txt", 'a') as f:
+                        for i in class_label_list:
+                            f.write(str(i) + "\n")
+                except:
+                    print ("class_label error!")
+                    pass;
+                ### test test block ends
+
+            #df = pd.DataFrame(count)
+            #df['file_names'] = f_name_list
+
+
         except FileNotFoundError:
             print ("File Not Found!")
             #counter = counter + 1
+
 
         ### custom code ends here
 
