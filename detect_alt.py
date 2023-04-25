@@ -244,7 +244,7 @@ def main(_argv):
                     with open (FLAGS.output + "filenames.txt", 'a') as f:
                         counter = 0
                         for i in f_name_list:
-                            f.write(str(counter) + "," + str(i) + "\n")
+                            f.write(str(i) + "\n")
                 except:
                     print ("filenames error!")
                     pass;
@@ -255,7 +255,7 @@ def main(_argv):
                     with open (FLAGS.output + "scores.txt", 'a') as f:
                         counter = 0
                         for i in score_list:
-                            f.write(str(counter) + "," + str(i) + "\n")
+                            f.write(str(i) + "\n")
                 except:
                     print ("scores error!")
                     pass;
@@ -266,7 +266,7 @@ def main(_argv):
                     with open (FLAGS.output + "classes.txt", 'a') as f:
                         counter = 0
                         for i in class_list:
-                            f.write(str(counter) + "," + str(i) + "\n")
+                            f.write(str(i) + "\n")
                 except:
                     print ("class error!")
                     pass;
@@ -276,7 +276,7 @@ def main(_argv):
                     with open (FLAGS.output + "class_names.txt", 'a') as f:
                         counter = 0
                         for i in class_label_list:
-                            f.write(str(counter) + "," + str(i) + "\n")
+                            f.write(str(i) + "\n")
                 except:
                     print ("class_label error!")
                     pass;
